@@ -51,7 +51,8 @@ column_settings = [
      "name": "Route",},
     {"df_col": "c_max",
      "id": "c_max",
-     "name": "C_{max}",},
+     "name": "C_max",
+     },
     {"df_col": "auc",
      "id": "auc",
      "name": "AUC",},
@@ -148,17 +149,21 @@ def toggle_dashboard_sidebar(n):
 
 @app.callback(
     Output('table', 'data'),
-    [Input('study-type-dropdown', 'value'), Input('drug-dropdown', 'value'),
-     Input('disease-dropdown', 'value'), Input("gest-age-range-slider", "value"), Input('table', 'sort_by')],
+    [Input('study-type-dropdown', 'value'), Input('drug-dropdown', 'value'), Input('route-dropdown', 'value'),
+     Input('disease-dropdown', 'value'), Input("gest-age-range-slider", "value"),
+     Input('pub-year-range-slider', 'value'), Input('table', 'sort_by')],
     prevent_initial_call=True
 )
-def update_table(selected_study_types, selected_drugs, selected_diseases, gest_age_range, sort_by):
+def update_table(selected_study_types, selected_drugs, selected_routes, selected_diseases,
+                 gest_age_range, pub_year_range, sort_by):
 
     filter_dict = {
         "study_type": selected_study_types,
         "drug": selected_drugs,
+        "route": selected_routes,
         "disease_condition": selected_diseases,
         "gest_age_range": gest_age_range,
+        "pub_year_range": pub_year_range,
     }
 
     out_df = data_utils.filter_df(GLOBAL_DF, filter_dict)
@@ -167,98 +172,156 @@ def update_table(selected_study_types, selected_drugs, selected_diseases, gest_a
     return out_df[[col["id"] for col in column_settings]].fillna("").to_dict('records')
 
 
+# @app.callback(
+#     Output("dashboard-plot", "figure"),
+#     [Input('table', 'data'), Input('plot-xaxis-dropdown', 'value')],
+# )
+# def update_dashboard_plot(data, x_axis):
+#
+#     # TODO: Review this and make simpler after adding dose and gestational_age
+#
+#     params = ["auc", "c_min", "c_max", "t_half", "t_max", "cl"]
+#
+#     # Create lightweight DF only with information that I want to plot
+#     plot_df = GLOBAL_DF.loc[[i["row_id"] for i in data]]
+#     # plot_df = plot_utils.get_plot_df(plot_df)
+#
+#     # TODO: Is this unnecessarily memory intensive? Is it better to just filter things again?
+#     #  Could you add dim to data in table and hide? Would have to convert to pythonic dict first and then deal with that
+#     #  Maybe find a way to see if this just becomes an image of GLOBAL_DF or whether a new variable is created/saved.
+#
+#     most_frequent_dim = dict.fromkeys(params+["dose"])
+#     for param in most_frequent_dim:
+#         try:
+#             most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
+#         except IndexError:
+#             most_frequent_dim[param] = np.nan
+#
+#     n_rows = 2
+#     n_cols = 3
+#     row_order, col_order = plot_utils.row_and_col_subplot_positions(n_rows, n_cols)
+#     # TODO: Change figure size to make it look more normal with 3 rows 2 columns
+#     # TODO: Instead of creating new figure every time, maybe instantiate once in layout and just update them here?
+#     dash_fig = plotly.subplots.make_subplots(
+#         rows=n_rows, cols=n_cols,
+#         subplot_titles=("AUC", "C_{min}", "C_{max}", "T_{1/2}", "T_{max}", "Clearance")
+#     )
+#
+#     y = [plot_df[plot_df[f"{param}_dim"] == most_frequent_dim[param]][f"{param}_stdized_val"] for param in params]
+#
+#     if x_axis == "dose":
+#         x = [plot_df["dose_stdized_val"][i_param.index] for i_param in y]
+#     elif x_axis == "gestational_age":
+#         x = [plot_df["gestational_age_stdized_val"][i_param.index] for i_param in y]
+#     else:
+#         x = [[0]*len(i_param) for i_param in y]
+#
+#     # TODO: Quick fix for this; I don't think you should have to reference the objects themselves and then convert them
+#     #  to base units
+#     # NOT WORKING: check lithium
+#     # This might be the worst line of code I've ever written
+#     units = [f'{(1 * plot_df[plot_df[f"{param}_dim"] == most_frequent_dim[param]][f"{param}_vr"].dropna().iloc[0].unit).to_base_units().units:~}' for param in params]
+#
+#     title = ["AUC", "CL", "Cmax", "Cmin", "Thalf", "Tmax"]
+#
+#     # TODO: Things to potentially add:
+#     #  - markersize depending on N?
+#     #  - change label/text when hovering to description of publication or data
+#     #  - change marker label to describe route
+#     #  - include range/stdev using error bars if available
+#     #  - change appearance of button that chooses x-axis (gestational age, dose, etc.)
+#
+#     # TODO: Could structure it in similar way to back-end codes for consistency (plus at the time I had a better
+#     #  understanding of how to best structure things)
+#
+#     for i_x, i_y, i_title, i_unit, ir, ic in zip(x, y, title, units, row_order, col_order):
+#         dash_fig.add_trace(
+#             go.Scatter(
+#                 x=i_x,
+#                 y=i_y,
+#                 mode="markers",
+#             ),
+#             row=ir, col=ic
+#         )
+#         dash_fig.update_yaxes(
+#             title_text=i_unit,
+#             row=ir, col=ic,
+#         )
+#         if x_axis == "dose":
+#             dash_fig.update_xaxes(
+#                 title_text="Dose",
+#                 row=ir, col=ir
+#             )
+#         elif x_axis == "gestational_age":
+#             dash_fig.update_xaxes(
+#                 title_text="Gestational Age (weeks)",
+#                 row=ir, col=ir
+#             )
+#         else:
+#             dash_fig.update_xaxes(
+#                 title_text="",
+#                 row=ir, col=ir
+#             )
+#
+#     dash_fig.update_layout(
+#         showlegend=False,
+#     )
+#
+#     return dash_fig
+
+
 @app.callback(
     Output("dashboard-plot", "figure"),
-    [Input('table', 'data'), Input('plot-xaxis-dropdown', 'value')],
+    [Input('table', 'data'), Input('plot-xaxis-dropdown', 'value'), Input('plot-groupby-dropdown', 'value')],
 )
-def update_dashboard_plot(data, x_axis):
+def update_dashboard_plot(data, x_axis, group_by):
 
     # TODO: Review this and make simpler after adding dose and gestational_age
 
     params = ["auc", "c_min", "c_max", "t_half", "t_max", "cl"]
-    data_df = pd.DataFrame.from_records(data)
 
-    # TODO: Is this unnecessarily memory intensive? Is it better to just filter things again?
-    #  Could you add dim to data in table and hide? Would have to convert to pythonic dict first and then deal with that
-    #  Maybe find a way to see if this just becomes an image of GLOBAL_DF or whether a new variable is created/saved.
-    plot_df = GLOBAL_DF.loc[data_df["row_id"].to_list()]
+    # Create lightweight DF only with information that I want to plot
+    plot_df = GLOBAL_DF.loc[[i["row_id"] for i in data]][
+        ["pmid", "n", "pub_year", "gestational_age_stdized_val", "dose_stdized_val", "dose_dim"] +
+        [f"{i}_stdized_val" for i in params] + [f"{i}_dim" for i in params]
+    ]
 
     most_frequent_dim = dict.fromkeys(params+["dose"])
     for param in most_frequent_dim:
-        most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
-        most_frequent_dim["dose"] = plot_df[f"dose_dim"].value_counts().index[0]
+        try:
+            most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
+        except IndexError:
+            most_frequent_dim[param] = np.nan
 
     n_rows = 2
     n_cols = 3
     row_order, col_order = plot_utils.row_and_col_subplot_positions(n_rows, n_cols)
     # TODO: Change figure size to make it look more normal with 3 rows 2 columns
     # TODO: Instead of creating new figure every time, maybe instantiate once in layout and just update them here?
-    dash_fig = plotly.subplots.make_subplots(
+    params_fig = plotly.subplots.make_subplots(
         rows=n_rows, cols=n_cols,
-        subplot_titles=("AUC", "C_{min}", "C_{max}", "T_{1/2}", "T_{max}", "Clearance")
+        subplot_titles=("AUC", "C_{min}", "C_{max}", "T_{1/2}", "T_{max}", "Clearance"),
     )
 
-    y = [plot_df[plot_df[f"{param}_dim"] == most_frequent_dim[param]][f"{param}_stdized_val"] for param in params]
+    plot_args = plot_utils.get_param_plot_args(plot_df, x_axis, group_by)
 
-    if x_axis == "dose":
-        x = [plot_df["dose_stdized_val"][i_param.index] for i_param in y]
-    elif x_axis == "gestational_age":
-        x = [plot_df["gestational_age_stdized_val"][i_param.index] for i_param in y]
-    else:
-        x = [[0]*len(i_param) for i_param in y]
-
-    # TODO: Quick fix for this; I don't think you should have to reference the objects themselves and then convert them
-    #  to base units
-    # NOT WORKING: check lithium
-    # This might be the worst line of code I've ever written
-    units = [f'{(1 * plot_df[plot_df[f"{param}_dim"] == most_frequent_dim[param]][f"{param}_vr"].dropna().iloc[0].unit).to_base_units().units:~}' for param in params]
-
-    title = ["AUC", "CL", "Cmax", "Cmin", "Thalf", "Tmax"]
-
-    # TODO: Things to potentially add:
-    #  - markersize depending on N?
-    #  - change label/text when hovering to description of publication or data
-    #  - change marker label to describe route
-    #  - include range/stdev using error bars if available
-    #  - change appearance of button that chooses x-axis (gestational age, dose, etc.)
-
-    # TODO: Could structure it in similar way to back-end codes for consistency (plus at the time I had a better
-    #  understanding of how to best structure things)
-
-    for i_x, i_y, i_title, i_unit, ir, ic in zip(x, y, title, units, row_order, col_order):
-        dash_fig.add_trace(
+    for plt, ir, ic in zip(plot_args, row_order, col_order):
+        params_fig.add_trace(
             go.Scatter(
-                x=i_x,
-                y=i_y,
+                x=plt["x"],
+                y=plt["y"],
+                legendgroup=plt["legendgroup"],
                 mode="markers",
             ),
-            row=ir, col=ic
-        )
-        dash_fig.update_yaxes(
-            title_text=i_unit,
             row=ir, col=ic,
         )
-        if x_axis == "dose":
-            dash_fig.update_xaxes(
-                title_text="Dose",
-                row=ir, col=ir
-            )
-        elif x_axis == "gestational_age":
-            dash_fig.update_xaxes(
-                title_text="Gestational Age (weeks)",
-                row=ir, col=ir
-            )
-        else:
-            dash_fig.update_xaxes(
-                title_text="",
-                row=ir, col=ir
+
+    if not group_by:
+        params_fig.update_layout(
+                showlegend=False,
             )
 
-    dash_fig.update_layout(
-        showlegend=False,
-    )
-
-    return dash_fig
+    return params_fig
 
 
 @app.callback(
