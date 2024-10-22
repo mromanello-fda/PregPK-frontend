@@ -125,7 +125,7 @@ def toggle_dashboard_sidebar(n):
 
 @app.callback(
     [Output("plot-sidebar", "className"), Output("plot_col", "className"),
-    Output("collapse-plot-sidebar-button", "children")],
+     Output("collapse-plot-sidebar-button", "children")],
     [Input("collapse-plot-sidebar-button", "n_clicks")],
 )
 def toggle_dashboard_sidebar(n):
@@ -169,7 +169,7 @@ def update_table(selected_study_types, selected_drugs, selected_routes, selected
     out_df = data_utils.filter_df(GLOBAL_DF, filter_dict)
     out_df = data_utils.sort_df(out_df, sort_by)
 
-    return out_df[[col["id"] for col in column_settings]].fillna("").to_dict('records')
+    return out_df[[col["id"] for col in column_settings]].to_dict('records')
 
 
 # @app.callback(
@@ -286,12 +286,27 @@ def update_dashboard_plot(data, x_axis, group_by):
         [f"{i}_stdized_val" for i in params] + [f"{i}_dim" for i in params]
     ]
 
-    most_frequent_dim = dict.fromkeys(params+["dose"])
-    for param in most_frequent_dim:
+    # most_frequent_dim = dict.fromkeys(params+["dose"])
+    # for param in most_frequent_dim:
+    #     try:
+    #         most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
+    #     except IndexError:
+    #         most_frequent_dim[param] = np.nan
+
+    # Filter for most frequent dimensionality
+    for param in params:
         try:
-            most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
-        except IndexError:
-            most_frequent_dim[param] = np.nan
+            most_frequent_dim = plot_df[f"{param}_dim"].value_counts().index[0]
+            incompatible_idxs = plot_df[plot_df[f"{param}_dim"] != most_frequent_dim].index.tolist()
+            plot_df.loc[incompatible_idxs, f"{param}_stdized_val"] = np.nan
+        except IndexError:  # Emtpy column
+            plot_df.loc[:, f"{param}_stdized_val"] = np.nan
+
+    # TODO: Think about it and make sure; but you should do all of your augmentation to plot_df wrong dimensionality,
+    #  missing dose, etc. here. Replace values in stdized_val with np.nans so that they are not plotted (and make sure
+    #  they are not also changed in GLOBAL_DF). Once all the data you don't want to plot is removed from the df, you
+    #  don't have to worry about filtering later on. This would also preserve the row's existence in plot_df, which
+    #  could be useful later (but is something to keep in mind; can't use things like len(plot_df).
 
     n_rows = 2
     n_cols = 3
