@@ -286,13 +286,6 @@ def update_dashboard_plot(data, x_axis, group_by):
         [f"{i}_stdized_val" for i in params] + [f"{i}_dim" for i in params]
     ]
 
-    # most_frequent_dim = dict.fromkeys(params+["dose"])
-    # for param in most_frequent_dim:
-    #     try:
-    #         most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
-    #     except IndexError:
-    #         most_frequent_dim[param] = np.nan
-
     # Filter for most frequent dimensionality
     for param in params:
         try:
@@ -302,25 +295,33 @@ def update_dashboard_plot(data, x_axis, group_by):
         except IndexError:  # Emtpy column
             plot_df.loc[:, f"{param}_stdized_val"] = np.nan
 
-    # TODO: Think about it and make sure; but you should do all of your augmentation to plot_df wrong dimensionality,
-    #  missing dose, etc. here. Replace values in stdized_val with np.nans so that they are not plotted (and make sure
-    #  they are not also changed in GLOBAL_DF). Once all the data you don't want to plot is removed from the df, you
-    #  don't have to worry about filtering later on. This would also preserve the row's existence in plot_df, which
-    #  could be useful later (but is something to keep in mind; can't use things like len(plot_df).
-
-    n_rows = 2
-    n_cols = 3
+    n_rows = 3
+    n_cols = 2
     row_order, col_order = plot_utils.row_and_col_subplot_positions(n_rows, n_cols)
     # TODO: Change figure size to make it look more normal with 3 rows 2 columns
     # TODO: Instead of creating new figure every time, maybe instantiate once in layout and just update them here?
     params_fig = plotly.subplots.make_subplots(
         rows=n_rows, cols=n_cols,
-        subplot_titles=("AUC", "C_{min}", "C_{max}", "T_{1/2}", "T_{max}", "Clearance"),
+        subplot_titles=("AUC", "C<sub>min</sub>", "C<sub>max</sub>", "T<sub>1/2</sub>", "T<sub>max</sub>", "Clearance"),
+        vertical_spacing=0.1, horizontal_spacing=0.1
+    )
+    params_fig.update_layout(
+        height=1000,
+        width=800,
     )
 
     plot_args = plot_utils.get_param_plot_args(plot_df, x_axis, group_by)
 
-    for plt, ir, ic in zip(plot_args, row_order, col_order):
+    # TODO: THIS IS A TEMPORARY FIX. NEED TO UPDATE THIS DYNAMICALLY.
+    # y_labels = [r"$\frac{mg*hr}{mL}$", r"$\frac{mg}{mL}$", r"$\frac{mg}{mL}$", r"$hr$", r"$hr$", r"$\frac{mL}{hr}$"]
+    y_labels = ["<sup>mg*hr</sup>/<sub>ml</sub>",
+                "<sup>mg</sup>/<sub>ml</sub>",
+                "<sup>mg</sup>/<sub>ml</sub>",
+                "hr",
+                "hr",
+                "<sup>mL</sup>/<sub>hr</sub>"]
+
+    for plt, ir, ic, y_label in zip(plot_args, row_order, col_order, y_labels):
         params_fig.add_trace(
             go.Scatter(
                 x=plt["x"],
@@ -329,6 +330,28 @@ def update_dashboard_plot(data, x_axis, group_by):
                 mode="markers",
             ),
             row=ir, col=ic,
+        )
+
+        # X axis label
+        if not x_axis:
+            params_fig.update_xaxes(
+                showticklabels=False
+            )
+        elif x_axis == "dose":
+            params_fig.update_xaxes(
+                title="Dose (mg)",
+                row=ir, col=ic,
+            )
+        elif x_axis == "gestational_age":
+            params_fig.update_xaxes(
+                title="Gestational Age (weeks)",
+                row=ir, col=ic,
+            )
+        # Y axis label
+        params_fig.update_yaxes(
+            title_text=y_label,
+            title_standoff=5,
+            row=ir, col=ic
         )
 
     if not group_by:
