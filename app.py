@@ -310,7 +310,7 @@ def update_dashboard_plot(data, x_axis, group_by):
         width=800,
     )
 
-    plot_args = plot_utils.get_param_plot_args(plot_df, x_axis, group_by)
+    group_args = plot_utils.get_param_plot_group_args(plot_df, x_axis, group_by, n_groups=5)
 
     # TODO: THIS IS A TEMPORARY FIX. NEED TO UPDATE THIS DYNAMICALLY.
     # y_labels = [r"$\frac{mg*hr}{mL}$", r"$\frac{mg}{mL}$", r"$\frac{mg}{mL}$", r"$hr$", r"$hr$", r"$\frac{mL}{hr}$"]
@@ -321,38 +321,47 @@ def update_dashboard_plot(data, x_axis, group_by):
                 "hr",
                 "<sup>mL</sup>/<sub>hr</sub>"]
 
-    for plt, ir, ic, y_label in zip(plot_args, row_order, col_order, y_labels):
-        params_fig.add_trace(
-            go.Scatter(
-                x=plt["x"],
-                y=plt["y"],
-                legendgroup=plt["legendgroup"],
-                mode="markers",
-            ),
-            row=ir, col=ic,
-        )
+    for i_group, group in enumerate(group_args):
+        for i, (plt, ir, ic, y_label) in enumerate(zip(group, row_order, col_order, y_labels)):
+            params_fig.add_trace(
+                go.Scatter(
+                    name=plt["legendgroup"],
+                    x=plt["x"],
+                    y=plt["y"],
+                    legendgroup=plt["legendgroup"],
+                    mode="markers",
+                    showlegend=i == 0,
+                    marker={
+                        "color": plt["color"]
+                    }
+                ),
+                row=ir, col=ic,
+            )
 
-        # X axis label
-        if not x_axis:
-            params_fig.update_xaxes(
-                showticklabels=False
-            )
-        elif x_axis == "dose":
-            params_fig.update_xaxes(
-                title="Dose (mg)",
-                row=ir, col=ic,
-            )
-        elif x_axis == "gestational_age":
-            params_fig.update_xaxes(
-                title="Gestational Age (weeks)",
-                row=ir, col=ic,
-            )
-        # Y axis label
-        params_fig.update_yaxes(
-            title_text=y_label,
-            title_standoff=5,
-            row=ir, col=ic
-        )
+            if i_group == 0:  # If first group, do formatting
+
+                # X axis label
+                if not x_axis:
+                    params_fig.update_xaxes(
+                        showticklabels=False
+                    )
+                elif x_axis == "dose":
+                    params_fig.update_xaxes(
+                        title="Dose (mg)",
+                        row=ir, col=ic,
+                    )
+                elif x_axis == "gestational_age":
+                    params_fig.update_xaxes(
+                        title="Gestational Age (weeks)",
+                        row=ir, col=ic,
+                    )
+
+                # Y axis label
+                params_fig.update_yaxes(
+                    title_text=y_label,
+                    title_standoff=5,
+                    row=ir, col=ic
+                )
 
     if not group_by:
         params_fig.update_layout(
