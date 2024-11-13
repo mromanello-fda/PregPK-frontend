@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 import pickle
 import pandas as pd
@@ -29,10 +30,10 @@ column_settings = [
      "id": "pub_year",
      "name": "Year",
      "sortable": True},
-    {"df_col": "drug",
-     "id": "drug",
+    {"id": "drug_hyperlink",
+     "type": "text",
      "name": "Drug",
-     "sortable": True,},
+     "presentation": "markdown",},
     {"df_col": "dose",
      "id": "dose",
      "name": "Dose",
@@ -81,6 +82,13 @@ column_settings = [
      "name": "N",
      "sortable": True,},
 ]
+
+# Load dropdowns
+with open(os.path.join("dropdowns", "drug_dropdown.json"), 'r') as f:
+    drug_dropdown = json.load(f)
+dropdowns = {
+    "drug": drug_dropdown
+}
 
 # back_end_column_settings = [
 #     {
@@ -282,7 +290,7 @@ def update_dashboard_plot(data, x_axis, group_by):
 
     # Create lightweight DF only with information that I want to plot
     plot_df = GLOBAL_DF.loc[[i["row_id"] for i in data]][
-        ["pmid", "n", "pub_year", "gestational_age_stdized_val", "dose_stdized_val", "dose_dim"] +
+        ["pmid", "n", "pub_year", "gestational_age_vr", "gestational_age_stdized_val", "dose_stdized_val", "dose_dim"] +
         [f"{i}_stdized_val" for i in params] + [f"{i}_dim" for i in params]
     ]
 
@@ -314,9 +322,9 @@ def update_dashboard_plot(data, x_axis, group_by):
 
     # TODO: THIS IS A TEMPORARY FIX. NEED TO UPDATE THIS DYNAMICALLY.
     # y_labels = [r"$\frac{mg*hr}{mL}$", r"$\frac{mg}{mL}$", r"$\frac{mg}{mL}$", r"$hr$", r"$hr$", r"$\frac{mL}{hr}$"]
-    y_labels = ["<sup>mg*hr</sup>/<sub>ml</sub>",
-                "<sup>mg</sup>/<sub>ml</sub>",
-                "<sup>mg</sup>/<sub>ml</sub>",
+    y_labels = ["<sup>mg*hr</sup>/<sub>mL</sub>",
+                "<sup>mg</sup>/<sub>mL</sub>",
+                "<sup>mg</sup>/<sub>mL</sub>",
                 "hr",
                 "hr",
                 "<sup>mL</sup>/<sub>hr</sub>"]
@@ -396,7 +404,7 @@ def display_page(pathname):
     if pathname == '/':
         return page_layouts.home_page()
     elif pathname == '/pk_dashboard':
-        return page_layouts.dashboard(GLOBAL_DF, column_settings)
+        return page_layouts.dashboard(GLOBAL_DF, column_settings, dropdowns)
     elif pathname == '/plots':
         return page_layouts.plot_page()
     elif pathname in ["/about-us", "/contact"]:
