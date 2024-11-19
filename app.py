@@ -290,11 +290,16 @@ def update_dashboard_plot(data, x_axis, group_by):
 
     # Create lightweight DF only with information that I want to plot
     plot_df = GLOBAL_DF.loc[[i["row_id"] for i in data]][
-        ["pmid", "n", "pub_year", "gestational_age_vr", "gestational_age_stdized_val", "dose_stdized_val", "dose_dim"] +
+        ["pmid", "n", "pub_year"] +
+        ["gestational_age_stdized_val", "has_non_pregnant", "has_tri_1", "has_tri_2", "has_tri_3", "has_delivery", "has_postpartum"] +
+        ["dose_stdized_val", "dose_dim"] +
         [f"{i}_stdized_val" for i in params] + [f"{i}_dim" for i in params]
     ]
 
     # Filter for most frequent dimensionality
+    cols_to_filter_by_dimensionality = params
+    if x_axis or group_by == "dose":
+        cols_to_filter_by_dimensionality.append("dose")
     for param in params:
         try:
             most_frequent_dim = plot_df[f"{param}_dim"].value_counts().index[0]
