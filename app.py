@@ -90,9 +90,6 @@ dropdowns = {
     "drug": drug_dropdown
 }
 
-with open(os.path.join("icons", "tablets-solid.svg"), "r") as drug_icon_file:
-    drug_icon = drug_icon_file.read()
-
 # back_end_column_settings = [
 #     {
 #         "df_col": f"{param}_stdized_val",
