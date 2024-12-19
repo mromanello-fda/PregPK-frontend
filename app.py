@@ -424,11 +424,9 @@ def download_df(n, data):
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/':
+    if pathname == '/' or pathname == "/pk-dashboard":
         return page_layouts.dashboard(GLOBAL_DF, column_settings, dropdowns)
-    elif pathname == '/pk_dashboard':
-        return page_layouts.dashboard(GLOBAL_DF, column_settings, dropdowns)
-    elif pathname == '/plots':
+    elif pathname == '/about-this-data':
         return page_layouts.plot_page()
     elif pathname in ["/about-us", "/contact"]:
         return page_layouts.under_construction_page()
