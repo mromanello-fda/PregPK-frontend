@@ -90,6 +90,9 @@ dropdowns = {
     "drug": drug_dropdown
 }
 
+with open(os.path.join("icons", "tablets-solid.svg"), "r") as drug_icon_file:
+    drug_icon = drug_icon_file.read()
+
 # back_end_column_settings = [
 #     {
 #         "df_col": f"{param}_stdized_val",
@@ -110,25 +113,140 @@ server = Flask(__name__)
 app = Dash(__name__, server=server)
 
 app.title = "PregPK"
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    page_layouts.get_navbar(),
-    html.Div(id="page-content")
-])
+app.layout = html.Div(
+    [
+        dcc.Location(id='url', refresh=False),
+        page_layouts.get_navbar(),
+        html.Div(id="page-content")
+    ],
+    className="full-page"
+)
 
 
 @app.callback(
     [Output("dashboard-sidebar", "className"), Output("data_col", "className"),
-     Output("dashboard-sidebar-content", "hidden"), Output("collapse-dashboard-sidebar-button", "children")],
+     Output("dashboard-sidebar-content", "hidden")],
     [Input("collapse-dashboard-sidebar-button", "n_clicks")],
 )
 def toggle_dashboard_sidebar(n):
     if n and n % 2 == 1:  # Every odd click
-        return "sidebar-collapsed", "page-expanded", \
-               True, [">>", html.Img(src='/assets/filter_icon.png', style={'height': '25px', 'width': 'auto'})]  # Collapse the sidebar
+        return "sidebar-collapsed", "page-expanded", True  # Collapse the sidebar
     else:  # Every even click
-        return "sidebar-expanded", "page-collapsed", \
-               False,  ["<<", html.Img(src='/assets/filter_icon.png', style={'height': '25px', 'width': 'auto'})]  # Expand the sidebar
+        return "sidebar-expanded", "page-collapsed", False  # Expand the sidebar
+
+
+@app.callback(
+    [Output("drug-filters-collapse", "is_open"), Output("collapse-button-drug-filters", "children")],
+    Input("collapse-button-drug-filters", "n_clicks"),
+)
+def toggle_collapse(n):
+    if n % 2 == 1:  # Every odd click
+        text = [
+            html.Span("Drug", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return False, text
+    else:
+        text = [
+            html.Span("Drug", style={"textAlign": "left"}),
+            html.Span("\u23f6", style={"textAlign": "right"}),
+        ]
+        return True, text
+
+
+@app.callback(
+    [Output("disease-filters-collapse", "is_open"), Output("collapse-button-disease-filters", "children")],
+    Input("collapse-button-disease-filters", "n_clicks"),
+)
+def toggle_collapse(n):
+    if n % 2 == 1:  # Every odd click
+        text = [
+            html.Span("Disease/Condition", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return False, text
+    else:
+        text = [
+            html.Span("Disease/Condition", style={"textAlign": "left"}),
+            html.Span("\u23f6", style={"textAlign": "right"}),
+        ]
+        return True, text
+
+
+@app.callback(
+    [Output("gest-age-filters-collapse", "is_open"), Output("collapse-button-gest-age-filters", "children")],
+    Input("collapse-button-gest-age-filters", "n_clicks"),
+)
+def toggle_collapse(n):
+    if n % 2 == 1:  # Every odd click
+        text = [
+            html.Span("Gestational Age", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return False, text
+    else:
+        text = [
+            html.Span("Gestational Age", style={"textAlign": "left"}),
+            html.Span("\u23f6", style={"textAlign": "right"}),
+        ]
+        return True, text
+
+
+@app.callback(
+    [Output("source-filters-collapse", "is_open"), Output("collapse-button-source-filters", "children")],
+    Input("collapse-button-source-filters", "n_clicks"),
+)
+def toggle_collapse(n):
+    if n % 2 == 1:  # Every odd click
+        text = [
+            html.Span("Source", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return False, text
+    else:
+        text = [
+            html.Span("Source", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return True, text
+
+
+@app.callback(
+    [Output("plot-options-collapse", "is_open"), Output("collapse-button-plot-options", "children")],
+    Input("collapse-button-plot-options", "n_clicks"),
+)
+def toggle_collapse(n):
+    if n % 2 == 1:  # Every odd click
+        text = [
+            html.Span("Plot Options", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return False, text
+    else:
+        text = [
+            html.Span("Plot Options", style={"textAlign": "left"}),
+            html.Span("\u23f6", style={"textAlign": "right"}),
+        ]
+        return True, text
+
+
+@app.callback(
+    [Output("download-options-collapse", "is_open"), Output("collapse-button-download-options", "children")],
+    Input("collapse-button-download-options", "n_clicks"),
+)
+def toggle_collapse(n):
+    if n % 2 == 1:  # Every odd click
+        text = [
+            html.Span("Download", style={"textAlign": "left"}),
+            html.Span("\u23f7", style={"textAlign": "right"}),
+        ]
+        return False, text
+    else:
+        text = [
+            html.Span("Download", style={"textAlign": "left"}),
+            html.Span("\u23f6", style={"textAlign": "right"}),
+        ]
+        return True, text
 
 
 @app.callback(
@@ -157,18 +275,19 @@ def toggle_dashboard_sidebar(n):
 
 @app.callback(
     Output('table', 'data'),
-    [Input('study-type-dropdown', 'value'), Input('drug-dropdown', 'value'), Input('route-dropdown', 'value'),
+    [Input('study-type-dropdown', 'value'), Input('drug-dropdown', 'value'),
      Input('disease-dropdown', 'value'), Input("gest-age-range-slider", "value"),
      Input('pub-year-range-slider', 'value'), Input('table', 'sort_by')],
     prevent_initial_call=True
 )
-def update_table(selected_study_types, selected_drugs, selected_routes, selected_diseases,
+def update_table(selected_study_types, selected_drugs, selected_diseases,
                  gest_age_range, pub_year_range, sort_by):
+
+    # TODO: Should you add route of administration again??
 
     filter_dict = {
         "study_type": selected_study_types,
         "drug": selected_drugs,
-        "route": selected_routes,
         "disease_condition": selected_diseases,
         "gest_age_range": gest_age_range,
         "pub_year_range": pub_year_range,
@@ -178,104 +297,6 @@ def update_table(selected_study_types, selected_drugs, selected_routes, selected
     out_df = data_utils.sort_df(out_df, sort_by)
 
     return out_df[[col["id"] for col in column_settings]].to_dict('records')
-
-
-# @app.callback(
-#     Output("dashboard-plot", "figure"),
-#     [Input('table', 'data'), Input('plot-xaxis-dropdown', 'value')],
-# )
-# def update_dashboard_plot(data, x_axis):
-#
-#     # TODO: Review this and make simpler after adding dose and gestational_age
-#
-#     params = ["auc", "c_min", "c_max", "t_half", "t_max", "cl"]
-#
-#     # Create lightweight DF only with information that I want to plot
-#     plot_df = GLOBAL_DF.loc[[i["row_id"] for i in data]]
-#     # plot_df = plot_utils.get_plot_df(plot_df)
-#
-#     # TODO: Is this unnecessarily memory intensive? Is it better to just filter things again?
-#     #  Could you add dim to data in table and hide? Would have to convert to pythonic dict first and then deal with that
-#     #  Maybe find a way to see if this just becomes an image of GLOBAL_DF or whether a new variable is created/saved.
-#
-#     most_frequent_dim = dict.fromkeys(params+["dose"])
-#     for param in most_frequent_dim:
-#         try:
-#             most_frequent_dim[param] = plot_df[f"{param}_dim"].value_counts().index[0]
-#         except IndexError:
-#             most_frequent_dim[param] = np.nan
-#
-#     n_rows = 2
-#     n_cols = 3
-#     row_order, col_order = plot_utils.row_and_col_subplot_positions(n_rows, n_cols)
-#     # TODO: Change figure size to make it look more normal with 3 rows 2 columns
-#     # TODO: Instead of creating new figure every time, maybe instantiate once in layout and just update them here?
-#     dash_fig = plotly.subplots.make_subplots(
-#         rows=n_rows, cols=n_cols,
-#         subplot_titles=("AUC", "C_{min}", "C_{max}", "T_{1/2}", "T_{max}", "Clearance")
-#     )
-#
-#     y = [plot_df[plot_df[f"{param}_dim"] == most_frequent_dim[param]][f"{param}_stdized_val"] for param in params]
-#
-#     if x_axis == "dose":
-#         x = [plot_df["dose_stdized_val"][i_param.index] for i_param in y]
-#     elif x_axis == "gestational_age":
-#         x = [plot_df["gestational_age_stdized_val"][i_param.index] for i_param in y]
-#     else:
-#         x = [[0]*len(i_param) for i_param in y]
-#
-#     # TODO: Quick fix for this; I don't think you should have to reference the objects themselves and then convert them
-#     #  to base units
-#     # NOT WORKING: check lithium
-#     # This might be the worst line of code I've ever written
-#     units = [f'{(1 * plot_df[plot_df[f"{param}_dim"] == most_frequent_dim[param]][f"{param}_vr"].dropna().iloc[0].unit).to_base_units().units:~}' for param in params]
-#
-#     title = ["AUC", "CL", "Cmax", "Cmin", "Thalf", "Tmax"]
-#
-#     # TODO: Things to potentially add:
-#     #  - markersize depending on N?
-#     #  - change label/text when hovering to description of publication or data
-#     #  - change marker label to describe route
-#     #  - include range/stdev using error bars if available
-#     #  - change appearance of button that chooses x-axis (gestational age, dose, etc.)
-#
-#     # TODO: Could structure it in similar way to back-end codes for consistency (plus at the time I had a better
-#     #  understanding of how to best structure things)
-#
-#     for i_x, i_y, i_title, i_unit, ir, ic in zip(x, y, title, units, row_order, col_order):
-#         dash_fig.add_trace(
-#             go.Scatter(
-#                 x=i_x,
-#                 y=i_y,
-#                 mode="markers",
-#             ),
-#             row=ir, col=ic
-#         )
-#         dash_fig.update_yaxes(
-#             title_text=i_unit,
-#             row=ir, col=ic,
-#         )
-#         if x_axis == "dose":
-#             dash_fig.update_xaxes(
-#                 title_text="Dose",
-#                 row=ir, col=ir
-#             )
-#         elif x_axis == "gestational_age":
-#             dash_fig.update_xaxes(
-#                 title_text="Gestational Age (weeks)",
-#                 row=ir, col=ir
-#             )
-#         else:
-#             dash_fig.update_xaxes(
-#                 title_text="",
-#                 row=ir, col=ir
-#             )
-#
-#     dash_fig.update_layout(
-#         showlegend=False,
-#     )
-#
-#     return dash_fig
 
 
 @app.callback(
@@ -385,20 +406,20 @@ def update_dashboard_plot(data, x_axis, group_by):
 
 
 @app.callback(
-    Output("download-database", "data"),
+    Output('download-database', 'data'),
     Input('download-button', 'n_clicks'),
-    [State('study-type-dropdown', 'value'), State('drug-dropdown', 'value'), State('disease-dropdown', 'value')],
+    [State('table', 'data')],
     prevent_initial_call=True
 )
-def download_df(n, selected_study_types, selected_drugs, selected_diseases):
+def download_df(n, data):
 
-    filter_dict = {
-        "study_type": selected_study_types,
-        "drug": selected_drugs,
-        "disease_condition": selected_diseases,
-    }
+    returned_cols = ["pmid", "pub_year", "drug", "dose", "gestational_age", "dosing_frequency",
+                     "route", "c_max", "auc", "t_max", "t_half", "cl", "c_min", "reference", "study_type",
+                     "n", "gsrs_unii", "atc_code"]
 
-    csv_string = data_utils.filter_df(GLOBAL_DF, filter_dict).to_csv(index=False)
+    df = GLOBAL_DF.loc[[i["row_id"] for i in data]][returned_cols]
+
+    csv_string = df.to_csv(index=False)
 
     return dict(content=csv_string, filename="pregPK.csv", mime_type="text/csv")
 

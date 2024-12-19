@@ -2,54 +2,97 @@ a:visited {
     color: purple;
 }
 
-.small-dropdown {
-    /* width: 300px; */
-    margin-right: 20px;
-    margin-left: 20px;
-    padding: 10px;
+.dashboard-container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 82px);  /* Full viewport minus navbar */
+    margin-top: 82px;  /* navbar */
 }
 
 .sidebar-expanded {
-    background-color: rgba(23, 162, 184, 0.2); /* 12, 162, 184 is RGB for #17a2b8, primary color */
+    background-color: rgb(115, 199, 212);
     display: inline-block;
     width: 20%;
+    min-width: 200px;
     height: 100%;
     transition: width 0.2s ease;
-    padding-top: 10px;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-collapsed {
-    background-color: rgba(23, 162, 184, 0.2);
+    background-color: rgb(115, 199, 212);
     display: inline-block;
     width: 2.5%;
+    min-width: 50px;
     height: 100%;
     transition: width 0.2s ease;
-    padding-top: 10px
+}
+
+.sidebar-content {
+    background-color: inherit;
+    overflow-y: scroll;
 }
 
 .page-collapsed {
+    flex: 1;
     display: inline-block;
     width: 80%;
     height: 100%;
     transition: width 0.2s ease;
     padding: 10px;
+    overflow-y: auto;
 }
 
 .page-expanded {
+    flex: 1;
     display: inline-block;
     width: 97.5%;
     height: 100%;
     transition: width 0.2s ease;
-    padding: 10px
+    padding: 10px;
+    overflow-y: auto;
 }
 
-.filter-button {
+.small-dropdown {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    color: black;
+}
+
+.blended-button {
     background-color: inherit;
     border: none;
 }
-.filter-button:focus {  /* Remove ugly blue line when clicked */
+.blended-button:focus {  /* Remove ugly blue line when clicked */
     outline: 0;
 }
-.filter-button:focus-visible {  /* But keep accessibility to find button using tab button */
+.blended-button:focus-visible {  /* But keep accessibility to find button using tab button */
     outline: 3px solid blue;
+}
+.blended-button:hover {
+    opacity: 0.6;  /* TODO: instead, look at doing box-shadows. They look great. */
+}
+
+.blended-button.full-width-menu {
+    width: 100%;
+    text-align: left;
+    height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+}
+
+.filter-group {
+    background-color: rgba(256, 256, 256, 0.3); /* TODO: instead, look at doing box-shadows. They look great. */
+    isolation: isolate;
+    margin-bottom: 10px;
+}
+
+.filter-group .filter-item {
+    padding: 10px;
+    color: white;
 }
