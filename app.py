@@ -428,7 +428,7 @@ def download_df(n, data):
               [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/':
-        return page_layouts.home_page()
+        return page_layouts.dashboard(GLOBAL_DF, column_settings, dropdowns)
     elif pathname == '/pk_dashboard':
         return page_layouts.dashboard(GLOBAL_DF, column_settings, dropdowns)
     elif pathname == '/plots':
