@@ -2,11 +2,14 @@ a:visited {
     color: purple;
 }
 
+.page {
+    height: calc(100vh - 82px);  /* Full viewport minus navbar */
+    margin-top: 82px;  /* navbar */
+}
+
 .dashboard-container {
     display: flex;
     flex-direction: row;
-    height: calc(100vh - 82px);  /* Full viewport minus navbar */
-    margin-top: 82px;  /* navbar */
 }
 
 .sidebar-expanded {
@@ -32,7 +35,26 @@ a:visited {
 
 .sidebar-content {
     background-color: inherit;
-    overflow-y: scroll;
+    overflow-y: auto;
+}
+
+/* Customizing the scrollbar */
+.sidebar-content::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: #ccc; /* Color of the thumb */
+  border-radius: 10px; /* Round the corners of the scrollbar */
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: #aaa; /* Darker thumb on hover */
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+  background: #f5f5f5; /* Match the parent background */
+  border-radius: 10px; /* Round the corners of the track */
 }
 
 .page-collapsed {
@@ -95,4 +117,53 @@ a:visited {
 .filter-group .filter-item {
     padding: 10px;
     color: white;
+}
+
+.profile {
+    display: flex;
+    flex-direction: row;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 100px;
+    padding-left: 100px;
+}
+
+.profile-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-name {
+    border: solid 2px black;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.profile-affiliation {
+    border: solid 2px black;
+    font-size: 20px;
+}
+
+.profile-role {
+    border: solid 2px red;
+    font-size: 20px;
+}
+
+.profile-headshot-and-links {
+}
+
+.profile-headshot {
+    aspect-ratio: 2/3;
+    object-fit: cover;
+    border-radius: 10%;
+    height: 200px;
+}
+
+.profile-links {
+    display: flex;
+    justify-content: space-around;
+}
+
+.profile-description {
+    border: solid 2px blue;
 }

@@ -203,7 +203,7 @@ def toggle_collapse(n):
     else:
         text = [
             html.Span("Source", style={"textAlign": "left"}),
-            html.Span("\u23f7", style={"textAlign": "right"}),
+            html.Span("\u23f6", style={"textAlign": "right"}),
         ]
         return True, text
 
@@ -269,7 +269,8 @@ def toggle_dashboard_sidebar(n):
 #  table were stored somewhere that can be accessed by the sorting function; this way, neither filtering nor conversion
 #  to a DataFrame has to be done when a sort is called.
 
-
+# TODO: Look into using ServersideOutput() instead of Output(); had long convo with ChatGPT about differences,
+#  looks interesting, faster, and cost-saving
 @app.callback(
     Output('table', 'data'),
     [Input('study-type-dropdown', 'value'), Input('drug-dropdown', 'value'),
@@ -428,8 +429,10 @@ def display_page(pathname):
         return page_layouts.dashboard(GLOBAL_DF, column_settings, dropdowns)
     elif pathname == '/about-this-data':
         return page_layouts.plot_page()
-    elif pathname in ["/about-us", "/contact"]:
-        return page_layouts.under_construction_page()
+    elif pathname == '/about-us':
+        return page_layouts.about_us_page()
+    elif pathname == 'contact-cite-us':
+        return page_layouts.contact_us_page()
     else:
         return page_layouts.error_404_page()
 
