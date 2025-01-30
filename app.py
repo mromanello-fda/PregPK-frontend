@@ -105,9 +105,9 @@ dropdowns = {
 #     for param in params]
 #
 # column_settings = column_settings + back_end_column_settings
-
+BOOTSTRAP_ICONS = "https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css"
 server = Flask(__name__)
-app = Dash(__name__, server=server)
+app = Dash(__name__, server=server, external_stylesheets=[BOOTSTRAP_ICONS])
 
 app.title = "PregPK"
 app.layout = html.Div(
